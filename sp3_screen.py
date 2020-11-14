@@ -41,10 +41,11 @@ def image_paths(directory):
 def zip_files(folder_name):
     """
     This will compress the screenshots folder with 7z
+    And encrypt it with a password, don't make it an easy password
     """
     screenzip = random_word(7) + '.7z'
 
-    with py7zr.SevenZipFile(screenzip, 'w') as archive:
+    with py7zr.SevenZipFile(screenzip, 'w', password='%w4A8gd-v') as archive:
         archive.writeall(folder_name, 'base')
     return screenzip
 
